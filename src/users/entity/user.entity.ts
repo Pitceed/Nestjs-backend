@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { ChatEntity } from "../../chats/entities/chat.entity";
+import { JoinTable } from "typeorm";
 
 @Entity('users')
 export class UserEntity {
@@ -11,4 +12,7 @@ export class UserEntity {
 
     @Column({ type: 'varchar', nullable: false })
     password: string;
+
+    //@ManyToMany( type => ChatEntity, chat => chat.users)
+    chats: ChatEntity[];
 }

@@ -1,13 +1,14 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable} from '@nestjs/common';
 import { UsersService } from "../users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from 'bcryptjs'
 import { genSalt, hash} from "bcryptjs";
-import {UserEntity} from "../users/entity/user.entity";
+import { UserEntity } from "../users/entity/user.entity";
 
 
 @Injectable()
 export class AuthService {
+
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
@@ -22,17 +23,19 @@ export class AuthService {
     }
 
     async register(username: string, password: string) {
-        /**
-         * TODO add existing validation
-         */
-        return this.genAuthTokensPair(
-            await this.usersService.createUser({
-                username: username,
-                password: await hash(
-                    password, await genSalt(10),
-                ),
-            })
-        )
+        const user = await this.usersService.findOne(username)
+        if (user) {
+            throw new BadRequestException()
+        } else {
+            return this.genAuthTokensPair(
+                await this.usersService.createUser({
+                    username: username,
+                    password: await hash(
+                        password, await genSalt(10),
+                    ),
+                })
+            )
+        }
     }
 
     async getAndValidateUser(username: string, pass: string): Promise<any> {
@@ -52,7 +55,7 @@ export class AuthService {
         const payload = {username: user.username, sub: user.id}
         return {
             access_token: this.jwtService.sign(payload),
-            refresh_token: ''//TODO add refres_htoken implementation
+            refresh_token: ''//TODO add refresh_token implementation
         }
     }
 }
