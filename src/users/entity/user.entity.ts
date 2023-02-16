@@ -1,6 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
-import { ChatEntity } from "../../chats/entities/chat.entity";
-import { JoinTable } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany} from 'typeorm';
+import { UserChatEntity } from "../../chats/entities/user_chat.entity";
 
 @Entity('users')
 export class UserEntity {
@@ -13,6 +12,6 @@ export class UserEntity {
     @Column({ type: 'varchar', nullable: false })
     password: string;
 
-    //@ManyToMany( type => ChatEntity, chat => chat.users)
-    chats: ChatEntity[];
+    @OneToMany(() => UserChatEntity, userToChat => userToChat.chat)
+    userToChat: UserChatEntity[];
 }

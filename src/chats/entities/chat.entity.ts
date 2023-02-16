@@ -1,7 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToMany, JoinTable} from 'typeorm';
 import { MessageEntity } from "./message.entity";
-import { UserEntity } from "../../users/entity/user.entity";
 import { ChatType } from "../enum/chat-type";
+import { UserChatEntity } from "./user_chat.entity";
 
 @Entity('chats')
 export class ChatEntity {
@@ -17,10 +17,10 @@ export class ChatEntity {
     @Column({type: 'varchar', default: ChatType.PERSONAL})
     type: ChatType;
 
-    @OneToMany(type => MessageEntity, message => message.chat)
+    @OneToMany(() => MessageEntity, message => message.chat)
     messages: MessageEntity[];
 
-    @ManyToMany(type => UserEntity, user => user.chats)
-    users: UserEntity[];
+    @OneToMany(() => UserChatEntity, userToChat => userToChat.user)
+    userToChat: UserChatEntity[];
 }
 

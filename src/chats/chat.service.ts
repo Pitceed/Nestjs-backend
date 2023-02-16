@@ -1,11 +1,14 @@
-import {Injectable} from "@nestjs/common";
-import {InjectRepository} from "@nestjs/typeorm";
-import {ChatEntity} from "./entities/chat.entity";
-import {Repository} from "typeorm";
-import {UserChatEntity} from "./entities/user_chat.entity";
-import {ChatType} from "./enum/chat-type";
-import {ChatRole} from "./enum/chat-role";
-
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { ChatEntity } from "./entities/chat.entity";
+import {createConnection, Repository} from "typeorm";
+import { UserChatEntity } from "./entities/user_chat.entity";
+import { ChatType } from "./enum/chat-type";
+import { ChatRole } from "./enum/chat-role";
+import { MessageEntity } from "./entities/message.entity";
+import { createQueryBuilder } from "typeorm";
+import {log} from "util";
+import {type} from "os";
 @Injectable()
 export class ChatService {
 
@@ -13,7 +16,9 @@ export class ChatService {
         @InjectRepository(ChatEntity)
         private readonly chatRepository: Repository<ChatEntity>,
         @InjectRepository(UserChatEntity)
-        private readonly userChatRepository: Repository<UserChatEntity>
+        private readonly userChatRepository: Repository<UserChatEntity>,
+        @InjectRepository(MessageEntity)
+        private readonly messageRepository: Repository<MessageEntity>
     ) {
     }
 
@@ -29,7 +34,7 @@ export class ChatService {
         )
     }
 
-    async createPersonalChat(usernameId: string, myId: string) {
+    async createPersonalChat(userId: string, myId: string) {
 
         //TODO: add existing chat validation!!
 
@@ -40,13 +45,15 @@ export class ChatService {
                 type: ChatType.PERSONAL
             })
         )
+
         console.log(chat.id)
+
         await this.userChatRepository.save(
             this.userChatRepository.create({
                 createdAt: new Date,
                 updatedAt: new Date,
                 permission: ChatRole.ADMIN,
-                userId: usernameId,
+                userId: userId,
                 chatId: chat.id
             })
         )
@@ -86,7 +93,7 @@ export class ChatService {
         )
     }
 
-    async addMemberToGroupChat(chatId: string, usernameId: string) {
+    async addMemberToGroupChat(chatId: string, userId: string) {
 
         //TODO: add existing chat validation!!
 
@@ -95,9 +102,72 @@ export class ChatService {
                 createdAt: new Date,
                 updatedAt: new Date,
                 permission: ChatRole.DEFAULT,
-                userId: usernameId,
+                userId: userId,
                 chatId: chatId
             })
         )
+    }
+
+    async findExistingChat(chatId: string) {
+        return await this.chatRepository.find({where: {id: chatId}})
+    }
+
+    async addMessageToChat(chatId: string, text: string, authorId: string) {
+        await this.messageRepository.save(
+            this.messageRepository.create({
+                text: text,
+                createdAt: new Date,
+                authorId: authorId,
+                chatId: chatId
+            })
+        )
+        return true
+    }
+
+    async getChatsByUserId(userId: string) {
+        const userChats = await this.userChatRepository.find({
+            where: {userId: userId},
+            relations: {
+                chat: true
+            }
+        })
+
+        const chatsArray = []
+        for (let value of userChats) {
+
+            const chatLastMessage = await this.messageRepository.findOne({
+                where: {chatId: value.chat.id}, order: {"createdAt": "DESC"}
+            })
+
+            let title = ''
+
+            if (!value.chat.title) {
+                title = "personal"
+                let allUsersByChat = await this.userChatRepository.find({where: {chatId : value.chatId}})
+                for (let chat of allUsersByChat) {
+                    if (chat.userId != value.userId) {
+                        title = chat.userId
+                        console.log(`my id is ${value.userId} , and my companion is ${chat.userId}`)
+                    }
+                }
+            } else {
+                title = value.chat.title
+            }
+
+            let chatInstance = {
+                id : value.chat.id,
+                title : title,
+                imageUrl : value.chat.imageUrl,
+                lastMessage : chatLastMessage
+            }
+
+            chatsArray.push(chatInstance)
+        }
+
+        return chatsArray
+    }
+
+    async getMessagesByChat(chatId: string) {
+        return this.messageRepository.find({where: {chatId: chatId}, order: {"createdAt": "DESC"}})
     }
 }

@@ -42,9 +42,9 @@ export class AppController {
   }
 
   @Post('personal-chat')
-  async createPersonalChat(@Body() data: {usernameId: string, myId: string}) {
+  async createPersonalChat(@Body() data: {userId: string, myId: string}) {
     console.log(data)
-    return this.chatService.createPersonalChat(data.usernameId, data.myId)
+    return this.chatService.createPersonalChat(data.userId, data.myId)
   }
 
   @Post('group-chat')
@@ -54,7 +54,22 @@ export class AppController {
   }
 
   @Post('member-to-group-chat')
-  async addMemberToGroupChat(@Body() data: {chatId: string, usernameId: string}) {
-    return this.chatService.addMemberToGroupChat(data.chatId, data.usernameId)
+  async addMemberToGroupChat(@Body() data: {chatId: string, userId: string}) {
+    return this.chatService.addMemberToGroupChat(data.chatId, data.userId)
+  }
+
+  @Post('message')
+  async addMessageToChat(@Body() data: {chatId: string, text: string, authorId: string}) {
+      return this.chatService.addMessageToChat(data.chatId, data.text, data.authorId)
+  }
+
+  @Post('chats-by-userId')
+  async getChatByUserId(@Body() data: {userId: string}) {
+      return this.chatService.getChatsByUserId(data.userId)
+  }
+
+  @Post('messages-by-chatId')
+  async getMessagesByChatId(@Body() data: {chatId: string}) {
+    return this.chatService.getMessagesByChat(data.chatId)
   }
 }
