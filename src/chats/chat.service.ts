@@ -1,14 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ChatEntity } from "./entities/chat.entity";
-import {createConnection, Repository} from "typeorm";
+import { Repository} from "typeorm";
 import { UserChatEntity } from "./entities/user_chat.entity";
 import { ChatType } from "./enum/chat-type";
 import { ChatRole } from "./enum/chat-role";
 import { MessageEntity } from "./entities/message.entity";
-import { createQueryBuilder } from "typeorm";
-import {log} from "util";
-import {type} from "os";
+import {UserEntity} from "../users/entity/user.entity";
+
 @Injectable()
 export class ChatService {
 
@@ -18,7 +17,9 @@ export class ChatService {
         @InjectRepository(UserChatEntity)
         private readonly userChatRepository: Repository<UserChatEntity>,
         @InjectRepository(MessageEntity)
-        private readonly messageRepository: Repository<MessageEntity>
+        private readonly messageRepository: Repository<MessageEntity>,
+        @InjectRepository(UserEntity)
+        private readonly userRepository: Repository<UserEntity>
     ) {
     }
 
@@ -146,7 +147,8 @@ export class ChatService {
                 let allUsersByChat = await this.userChatRepository.find({where: {chatId : value.chatId}})
                 for (let chat of allUsersByChat) {
                     if (chat.userId != value.userId) {
-                        title = chat.userId
+                        let correspondingUser = await this.userRepository.findOne({where: {id: chat.userId}})
+                        title = correspondingUser.username
                         console.log(`my id is ${value.userId} , and my companion is ${chat.userId}`)
                     }
                 }
@@ -168,6 +170,6 @@ export class ChatService {
     }
 
     async getMessagesByChat(chatId: string) {
-        return this.messageRepository.find({where: {chatId: chatId}, order: {"createdAt": "DESC"}})
+        return this.messageRepository.find({where: {chatId: chatId}, order: {"createdAt": "ASC"}})
     }
 }

@@ -14,22 +14,23 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) {}
 
-    async login(username: string, password: string) {
-        const user = await this.getAndValidateUser(username, password)
+    async login(email: string, password: string) {
+
+        const user = await this.getAndValidateUser(email, password)
         if (!user) {
             throw new BadRequestException()
         }
        return this.genAuthTokensPair(user)
     }
 
-    async register(username: string, password: string) {
-        const user = await this.usersService.findOne(username)
+    async register(email: string, password: string) {
+        const user = await this.usersService.findOne(email)
         if (user) {
             throw new BadRequestException()
         } else {
             return this.genAuthTokensPair(
                 await this.usersService.createUser({
-                    username: username,
+                    email: email,
                     password: await hash(
                         password, await genSalt(10),
                     ),
@@ -38,8 +39,10 @@ export class AuthService {
         }
     }
 
-    async getAndValidateUser(username: string, pass: string): Promise<any> {
-        const user = await this.usersService.findOne(username)
+
+
+    async getAndValidateUser(email: string, pass: string): Promise<any> {
+        const user = await this.usersService.findOne(email)
         if (user && (await  this.passwordsAreEqual(user.password, pass))) {
             const { password, ...result } = user
             return result
@@ -52,7 +55,7 @@ export class AuthService {
     }
 
     private async genAuthTokensPair(user: UserEntity) {
-        const payload = {username: user.username, sub: user.id}
+        const payload = {email: user.email, sub: user.id}
         return {
             access_token: this.jwtService.sign(payload),
             refresh_token: ''//TODO add refresh_token implementation

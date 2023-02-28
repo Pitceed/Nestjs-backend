@@ -11,13 +11,26 @@ export class UsersService {
         private readonly userRepository: Repository<UserEntity>
     ) {}
 
-    async findOne(username: string): Promise <UserEntity | undefined> {
-        return await this.userRepository.findOne({where: {username}})
+    async findOne(email: string): Promise <UserEntity | undefined> {
+        console.log(email)
+        const response = await this.userRepository.findOne({where: {email: email}})
+        console.log(response)
+        return response
     }
 
     async createUser(data: Partial<UserEntity>) {
         return this.userRepository.save(
             this.userRepository.create(data)
         )
+    }
+
+    async changeUsername(userId: string , username: string) {
+        if(await this.userRepository.findOne({where: {username: username}})) {
+            let error = "current username is already existing"
+            console.log(error)
+            return error
+        } else {
+            return this.userRepository.update({id: userId}, {username: username})
+        }
     }
 }

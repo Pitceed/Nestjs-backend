@@ -20,19 +20,27 @@ export class AppController {
   @Get('me')
   async getCurrentUser( @Request() request: any ) {
     console.log(request.user)
-    return this.userService.findOne(request.user.username)
+    return this.userService.findOne(request.user.email)
   }
 
   @Post('login')
   async login( @Body() data: UserDto ) {
-    return this.authService.login(data.username, data.password)
+    console.log(
+        "controller ", data
+    )
+    return this.authService.login(data.email, data.password)
   }
 
   @UsePipes(new ValidationPipe())
   @HttpCode(200)
   @Post('register')
   async register( @Body() data: UserDto ) {
-    return this.authService.register(data.username, data.password)
+    return this.authService.register(data.email, data.password)
+  }
+
+  @Post('change-username')
+  async changeUsername(@Body() data: {userId: string, username: string}) {
+    return this.userService.changeUsername(data.userId, data.username)
   }
 
   @Post('singleChat')

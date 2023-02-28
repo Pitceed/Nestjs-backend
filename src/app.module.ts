@@ -7,9 +7,9 @@ import { UsersModule } from './users/users.module';
 import { UserEntity } from "./users/entity/user.entity";
 import { MessageEntity } from "./chats/entities/message.entity";
 import { ChatEntity } from "./chats/entities/chat.entity";
-import {UserChatEntity} from "./chats/entities/user_chat.entity";
-import {ChatModule} from "./chats/chat.module";
-import {ChatService} from "./chats/chat.service";
+import { UserChatEntity } from "./chats/entities/user_chat.entity";
+import { ChatModule } from "./chats/chat.module";
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
